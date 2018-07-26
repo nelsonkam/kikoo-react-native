@@ -9,7 +9,7 @@ function searchRestaurant(text) {
       input: text,
       inputtype: "textquery",
       language: "fr",
-      locationbias: "circle:5000@6.379448:2.451324",
+      locationbias: "circle:50000@6.379448:2.451324",
       fields: "photos,formatted_address,name,opening_hours,rating,price_level,id,place_id,types"
     }
   }).then((res) => {

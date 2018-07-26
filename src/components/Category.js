@@ -1,11 +1,11 @@
 import React from "react";
-import {View} from "react-native";
+import {View, TouchableOpacity} from "react-native";
 import { MediumText } from "./Text";
 import styled from "styled-components";
 
-const Category = ({ image, text, key }) => (
-  <View style={{ width: "33%", padding: 8, alignItems: "center" }} key={key}>
-    <CircleImage source={{ uri: image }} />
+const Category = ({ image, text, key, onPress }) => (
+  <TouchableOpacity onPress={() => onPress(text)} style={{ width: "33%", padding: 8, alignItems: "center" }} key={key}>
+    <CircleImage source={image} />
     <MediumText
       numberOfLines={1}
       ellipsizeMode="tail"
@@ -13,7 +13,7 @@ const Category = ({ image, text, key }) => (
     >
       {text}
     </MediumText>
-  </View>
+  </TouchableOpacity>
 );
 
 const CircleImage = styled.Image`

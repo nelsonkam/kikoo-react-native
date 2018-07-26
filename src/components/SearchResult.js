@@ -15,10 +15,14 @@ const SearchResult = (props) => (
         >
           ★
         </BoldText>
-        <BoldText style={{ fontSize: 16 }}> · </BoldText>
-        <Text style={{ color: props.isOpened ? "green" : "red" }}>
-          {props.isOpened ? "Ouvert" : "Fermé"}
-        </Text>
+        {props.isOpened !== null && 
+          <React.Fragment>
+            <BoldText style={{ fontSize: 16 }}> · </BoldText>
+            <Text style={{ color: props.isOpened ? "green" : "red" }}>
+              {props.isOpened ? "Ouvert" : "Fermé"}
+            </Text>
+          </React.Fragment>
+        }
       </TextLine>
     </View>
     <Image

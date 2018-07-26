@@ -1,12 +1,11 @@
 import React, { Component } from "react";
 import {
-  Platform,
-  StyleSheet,
   View,
   Image,
   FlatList,
   ToastAndroid,
-  TouchableHighlight
+  BackHandler,
+  TouchableOpacity
 } from "react-native";
 import InputCard from "../components/InputCard";
 import { Text, MediumText, BoldText } from "../components/Text";
@@ -15,77 +14,101 @@ import styled from "styled-components";
 import { searchNearby, getImage } from "../data";
 import RestaurantCard from "../components/RestaurantCard";
 import Category from "../components/Category";
-import SearchResult from "../components/SearchResult";
+
+import Search from "./Search";
 
 const URL =
   "https://firebasestorage.googleapis.com/v0/b/kikoo-33dd9.appspot.com/o/cover-images%2Fcjhb4nf6c00013i5lhxe6vmms-bestwestern.jpg?alt=media&token=1540c44b-9db7-4005-bf53-4acef0e6f18b";
 
 const popularRestos = [
   {
-    image: URL,
-    text: "Restaurant BestWestern Akwaba"
+    image: require("../../assets/mcbouffe.jpg"),
+    text: "McBouffe"
   },
   {
-    image: URL,
-    text: "Restaurant BestWestern Akwaba"
+    image: require("../../assets/steers.jpg"),
+    text: "Debonnaire's / Steers"
   },
   {
-    image: URL,
-    text: "Restaurant BestWestern Akwaba"
+    image: require("../../assets/impala.jpg"),
+    text: "Impala"
   },
   {
-    image: URL,
-    text: "Restaurant BestWestern Akwaba"
+    image: require("../../assets/dominos.jpg"),
+    text: "Domino's Express"
   }
 ];
 const categories = [
   {
-    image: URL,
+    image: require("../../assets/breakfast.jpg"),
     text: "Petit Déjeuner"
   },
   {
-    image: URL,
+    image: require("../../assets/lunch.jpg"),
     text: "Déjeuner"
   },
   {
-    image: URL,
+    image: require("../../assets/dinner.jpg"),
     text: "Diner"
   },
   {
-    image: URL,
+    image: require("../../assets/dessert.jpg"),
     text: "Desserts"
   },
   {
-    image: URL,
-    text: "Boissons"
+    image: require("../../assets/drinks.jpg"),
+    text: "Boisson"
   }
 ];
 export default class Home extends Component {
+
   state = {
     search: "",
     isSearching: false,
+    isSearchLoading: false,
     searchResults: []
   };
+  componentDidMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+  }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
+  }
+
+  handleBackPress = () => {
+    if (this.state.isSearching) {
+      this.setState({ search: "", isSearching: false });
+      return true
+    } 
+    return false
+  }
 
   handleSearchClick = () => {
     const { search } = this.state;
-    this.setState({ isSearching: search !== "" });
-    searchNearby(search)
-      .then(res => {
-        console.log(res, search);
-        this.setState({ searchResults: res });
-        res.forEach((elem, i) => {
-          getImage(elem.image).then(image => {
-            res[i].imageURL = { uri: image };
-            this.setState({ searchResults: res });
-          });
-        });
-      })
-      .catch(err => {
-        console.log(err);
-        ToastAndroid.show("Une erreur est survenue", ToastAndroid.SHORT);
-      });
+    this.setState({ isSearching: search !== "", isSearchLoading: true });
+    this.searchRestaurant(search)
   };
+
+  searchRestaurant = (search) => {
+    searchNearby(search)
+    .then(res => {
+      console.log(res, search);
+      this.setState({ searchResults: res, isSearchLoading: false });
+      res.forEach((elem, i) => {
+        getImage(elem.image).then(image => {
+          res[i].imageURL = { uri: image };
+          this.setState({ searchResults: res });
+        });
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      this.setState({ isSearchLoading: false });
+      ToastAndroid.show("Une erreur est survenue", ToastAndroid.SHORT);
+    });
+  }
+
   handleSearchChange = search => {
     if (search === "") {
       this.setState({ search, isSearching: false });
@@ -93,8 +116,14 @@ export default class Home extends Component {
       this.setState({ search });
     }
   };
+
+  handleCategoryClick = (search) => {
+    this.setState({ search, isSearching: true, isSearchLoading: true });
+    this.searchRestaurant(search)
+  }
+
   render() {
-    const { isSearching } = this.state;
+    const { isSearching, isSearchLoading, searchResults } = this.state;
     let content;
     if (!isSearching) {
       content = (
@@ -109,17 +138,13 @@ export default class Home extends Component {
           <FlatList
             numColumns={3}
             data={categories}
-            renderItem={({ item }, i) => <Category {...item} key={i} />}
+            renderItem={({ item }, i) => <Category {...item} onPress={this.handleCategoryClick} key={i} />}
           />
         </Content>
       );
     } else {
       content = (
-        <FlatList
-          extraData={this.state}
-          data={this.state.searchResults}
-          renderItem={({ item }) => <SearchResult {...item} />}
-        />
+        <Search isLoading={isSearchLoading} extraData={this.state} searchResults={searchResults} />
       );
     }
     return (
@@ -129,15 +154,16 @@ export default class Home extends Component {
             onFocus={() => console.log(this.state)}
             onChangeText={this.handleSearchChange}
             style={{ padding: 8 }}
-            placeholder="Que cherchez vus ?"
+            value={this.state.search}
+            placeholder="Que cherchez vous ?"
           />
 
-          <TouchableHighlight onPress={this.handleSearchClick}>
+          <TouchableOpacity onPress={this.handleSearchClick}>
             <Image
               style={{ width: 26, height: 26, margin: 8 }}
               source={require("../../assets/search.png")}
             />
-          </TouchableHighlight>
+          </TouchableOpacity>
         </InputCard>
         {content}
       </View>
@@ -145,13 +171,6 @@ export default class Home extends Component {
   }
 }
 
-
-
-const SearchContainer = styled.View`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-`;
 const Content = styled.ScrollView`
   margin-right: 8px;
   margin-left: 8px;

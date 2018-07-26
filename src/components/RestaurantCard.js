@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 const RestaurantCard = ({ image, text, key }) => (
   <View style={{ width: "50%", padding: 8 }} key={key}>
-    <TileImage source={{ uri: image }} />
+    <TileImage source={image} />
     <Text numberOfLines={1} ellipsizeMode="tail" style={{ marginTop: 6 }}>
       {text}
     </Text>
